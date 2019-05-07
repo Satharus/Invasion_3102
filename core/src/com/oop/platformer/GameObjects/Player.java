@@ -13,7 +13,7 @@ import com.oop.platformer.util.Assets;
 public class Player extends GameObject {
 
 
-    public enum State {Falling, Jumping, Standing, Running, Shooting, Jumping_Shooting, Dead}
+    public enum State {Falling, Jumping, Standing, Running, Shooting, Jumping_Shooting, Dead, Win}
 
     private int jumpCounter = 0;
     private State currentState;
@@ -25,8 +25,8 @@ public class Player extends GameObject {
     //player Score
     private int score;
     //player dead or not
-    public boolean win;
-    public boolean dead;
+    private boolean win;
+    private boolean dead;
     public boolean shooting;
 
     private Vector2 respawnPosition;
@@ -46,6 +46,7 @@ public class Player extends GameObject {
         currentTime = 0;
         previousTime = 0;
         deathTime = 0;
+        winTime = 0;
 
         lives = Constants.LIVES;
         score = Constants.SCORE;
@@ -60,7 +61,7 @@ public class Player extends GameObject {
         setBounds(0, 0, 32 / GameClass.PPM, 32 / GameClass.PPM);
 
 
-        setRegion(Assets.instance.feministAssets.idleAnimation.getKeyFrame(stateTimer, true));
+        setRegion(Assets.instance.playerAssets.idleAnimation.getKeyFrame(stateTimer, true));
     }
 
 
@@ -90,7 +91,7 @@ public class Player extends GameObject {
     public void update(float deltaTime) {
         currentTime += deltaTime;
 
-        if (win)
+        if (win && winTime == 0)
             winTime = currentTime;
 
         checkPlayerPosition();
@@ -114,24 +115,25 @@ public class Player extends GameObject {
 
         switch (currentState) {
             case Jumping:
-                region = Assets.instance.feministAssets.jumpingAnimation;
+                region = Assets.instance.playerAssets.jumpingAnimation;
                 break;
             case Running:
-                region = Assets.instance.feministAssets.runAnimation.getKeyFrame(stateTimer, true);
+                region = Assets.instance.playerAssets.runAnimation.getKeyFrame(stateTimer, true);
                 break;
             case Shooting:
             case Jumping_Shooting:
-                region = Assets.instance.feministAssets.shootAnimation.getKeyFrame(stateTimer, true);
+                region = Assets.instance.playerAssets.shootAnimation.getKeyFrame(stateTimer, true);
                 break;
             case Falling:
-                region = Assets.instance.feministAssets.fallingAnimation.getKeyFrame(stateTimer, true);
+                region = Assets.instance.playerAssets.fallingAnimation.getKeyFrame(stateTimer, true);
                 break;
             case Dead:
-                region = Assets.instance.feministAssets.deathAnimation.getKeyFrame(stateTimer, false);
+                region = Assets.instance.playerAssets.deathAnimation.getKeyFrame(stateTimer, false);
                 break;
             case Standing:
+            case Win:
             default:
-                region = Assets.instance.feministAssets.idleAnimation.getKeyFrame(stateTimer, true);
+                region = Assets.instance.playerAssets.idleAnimation.getKeyFrame(stateTimer, true);
                 break;
         }
 
@@ -166,11 +168,13 @@ public class Player extends GameObject {
             return State.Shooting;
         else if (dead)
             return State.Dead;
+        else if (win)
+            return State.Win;
         else
             return State.Standing;
     }
 
-    public void handleInput(float deltaTime) {
+    public void handleInput() {
 
         float verticalSpeed = body.getLinearVelocity().y;
 
@@ -227,11 +231,13 @@ public class Player extends GameObject {
         return dead;
     }
 
+    public boolean isWin() {return win;}
+
     public void increaseScore() {
         score += 100;
     }
 
-    public void respawnPlayer() {
+    private void respawnPlayer() {
         body.setTransform(new Vector2(xRespawn, yRespawn), 0);
         if (!isRunningRight())
             runningRight = true;
@@ -241,15 +247,17 @@ public class Player extends GameObject {
         return runningRight;
     }
 
-    public boolean endLevel() {
-        return dead && currentTime - deathTime >= 5;
+    public boolean wonLevel(){
+        return win && currentTime - winTime >= 5;
     }
 
-    public boolean getWin() {
-        if (currentTime - winTime >= 5 && win) {
-            return true;
-        } else
-            return false;
+    public void setWin(){
+        win = true;
+        winTime = currentTime;
+    }
+
+    public boolean lostLevel() {
+        return dead && currentTime - deathTime >= 5;
     }
 
 }

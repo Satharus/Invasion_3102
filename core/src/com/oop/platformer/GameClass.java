@@ -5,10 +5,7 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-import com.oop.platformer.Screens.GameOverScreen;
-import com.oop.platformer.Screens.IntroScreen;
-import com.oop.platformer.Screens.Level1;
-import com.oop.platformer.Screens.StartScreen;
+import com.oop.platformer.Screens.*;
 import com.oop.platformer.util.Assets;
 
 public class GameClass extends Game {
@@ -25,8 +22,7 @@ public class GameClass extends Game {
 
     public SpriteBatch batch;
 
-    public static boolean pauseMusic;
-    private boolean gameOver;
+    public static boolean isMusicPaused;
 
     public GameClass() {
     }
@@ -40,10 +36,9 @@ public class GameClass extends Game {
     public void create() {
         batch = new SpriteBatch();
         Assets.instance.init(new AssetManager());
-        pauseMusic = true;
-        gameOver = false;
+        isMusicPaused = true; //Change this to true if you want the music to be paused by default
         //The Play Screen
-        setScreen(new Level1(this)); // To view MainMenuScreen change Level1 to MainMenuScreen
+        setScreen(new StartScreen(this)); // To view StartScreen change Level1 to StartScreen
 
     }
 
@@ -59,24 +54,54 @@ public class GameClass extends Game {
     }
 
     private void checkMusicControl() {
-        if (!pauseMusic)
-            Assets.instance.audio.mainThemeMusic.play();
-        else
-            Assets.instance.audio.mainThemeMusic.pause();
+        if (!isMusicPaused) {
+            if (this.getScreen().toString().contains("StartScreen"))
+                Assets.instance.audio.startScreenMusic.play();
+
+            else if (this.getScreen().toString().contains("Level1"))
+                Assets.instance.audio.mainThemeMusic.play();
+
+            else if (this.getScreen().toString().contains("OutroScreen")) {
+                if (OutroScreen.playerWon)
+                    Assets.instance.audio.winMusic.play();
+                else if (OutroScreen.playerLost)
+                    Assets.instance.audio.loseMusic.play();
+            }
+
+        } else {
+            if (this.getScreen().toString().contains("StartScreen"))
+                Assets.instance.audio.startScreenMusic.pause();
+
+            else if (this.getScreen().toString().contains("Level1"))
+                Assets.instance.audio.mainThemeMusic.pause();
+
+            else if (this.getScreen().toString().contains("OutroScreen")) {
+                if (OutroScreen.playerWon)
+                    Assets.instance.audio.winMusic.pause();
+                else if (OutroScreen.playerLost)
+                    Assets.instance.audio.loseMusic.pause();
+            }
+
+        }
+
     }
 
     public void beginIntro() {
         setScreen(new IntroScreen(this));
+        Assets.instance.audio.startScreenMusic.stop();
     }
 
-    public void endIntro() {
+    public void beginLevel() {
         Assets.instance.audio.introMusic.stop();
         setScreen(new Level1(this));
     }
 
-    public void gameOver(boolean playerState) {
-        setScreen(new GameOverScreen(playerState));
+    public void beginOutro(boolean playerState) {
+        setScreen(new OutroScreen(this, playerState));
     }
 
 
+    public void endOutro() {
+        setScreen(new StartScreen(this));
+    }
 }

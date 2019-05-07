@@ -4,7 +4,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.maps.Map;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -25,30 +24,55 @@ import com.oop.platformer.util.CollisionHandler;
 import com.oop.platformer.util.LevelManager;
 
 
+
 public class Level1 implements Screen {
 
     private GameClass gameClass;
-
     private OrthographicCamera gameCam; //game camera instance to move with the player character
-
     private Viewport gamePort; //Manages a Camera and determines how world coordinates are mapped to and from the screen.
-
     private TiledMap map;//reference for the map itself
-
     private Hud hud;
     private OrthogonalTiledMapRenderer renderer;
-
     private World world;
 
     // for rendering debugging
     private Box2DDebugRenderer floorDebugger;
 
-    private LevelManager levelManager;
-
     private Player player;
 
-    public Array<Bullet> bullets;
-    public Array<Enemy> enemies;
+    private Array<Bullet> bullets;
+    private Array<Enemy> enemies;
+
+    public GameClass getGameClass() {
+        return gameClass;
+    }
+
+    public OrthographicCamera getGameCam() {
+        return gameCam;
+    }
+
+    public Hud getHud() {
+        return hud;
+    }
+    public OrthogonalTiledMapRenderer getRenderer(){
+        return renderer;
+    }
+
+    public World getWorld() {
+        return world;
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public Array<Bullet> getBullets() {
+        return bullets;
+    }
+
+    public Array<Enemy> getEnemies() {
+        return enemies;
+    }
 
 
     public Level1(GameClass gameClass) {
@@ -74,9 +98,12 @@ public class Level1 implements Screen {
         renderFloor();
 
         addObjectsToTheWorld();
-        levelManager = new LevelManager(gameClass, this, player, enemies, hud, world, bullets, gameCam);
+//        levelManager = new LevelManager(gameClass, this, player, enemies, hud, world, bullets, gameCam);
+//        levelManager = new LevelManager(this);
+        LevelManager.instance.setLevel(this);
         //Adding contact listener to listen for collisions between bodies, with level manager with our game Objects
-        world.setContactListener(new CollisionHandler(levelManager));
+        world.setContactListener(CollisionHandler.instance);
+
     }
 
     private void addObjectsToTheWorld() {
@@ -206,26 +233,13 @@ public class Level1 implements Screen {
 
     //update the game state
     private void update(float deltaTime) {
-
-        levelManager.update(deltaTime);
         /*
-        set timeStamp and velocity 
+        set timeStamp and velocity
         to avoid CPU & GPU speed differences
         */
-        world.step(1 / 60f, 60, 2);
-        player.update(deltaTime);
+        LevelManager.instance.update(deltaTime);
 
-        //Bullet update
-        for (Bullet bullet : bullets) {
-            bullet.update(deltaTime);
-        }
 
-        for (Enemy enemy : enemies)
-            enemy.update(deltaTime);
-
-        gameCam.position.x = player.body.getWorldCenter().x;
-        gameCam.update();
-        renderer.setView(gameCam); //tells our renderer to draw only what camera can see in our game world
     }
 
     @Override
