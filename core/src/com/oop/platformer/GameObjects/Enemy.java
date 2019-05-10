@@ -2,18 +2,18 @@ package com.oop.platformer.GameObjects;
 
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.*;
-import com.oop.platformer.GameClass;
+import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
+import com.oop.platformer.GameClass;
 import com.oop.platformer.util.Assets;
 
 public abstract class Enemy extends GameObject {
 
-    private Path path;
     public boolean destroyed;
-    private boolean isSetToDestroy;
     int healthPoints;
     float stateTime;
+    private Path path;
+    private boolean isSetToDestroy;
 
     public Enemy(World world, Vector2 spritePosition, Array<Vector2> path, float[] durations) {
         super(world, spritePosition);
@@ -22,10 +22,8 @@ public abstract class Enemy extends GameObject {
         isSetToDestroy = false;
         stateTime = 0;
         this.path = new Path(path.size);
-        for(int i =0; i<path.size; i++)
+        for (int i = 0; i < path.size; i++)
             this.path.AddPoint(path.get(i), durations[i]);
-//        for (Vector2 p : path)
-//            this.path.AddPoint(p, durations.get());
         this.path.Reset();
         initSprite();
         setHealthPoints();
@@ -75,15 +73,13 @@ public abstract class Enemy extends GameObject {
 
     public class Path {
 
+        static final float CHECK_RADIUS = 1f / GameClass.PPM;
         Array<Vector2> points;
         Array<Float> durations;
         Vector2 velocity;
-
         int countPoints;
         int currentPointIndex;
         int nextPointIndex;
-
-        static final float CHECK_RADIUS = 1f / GameClass.PPM;
 
         Path(int countPoints) {
 
@@ -103,10 +99,6 @@ public abstract class Enemy extends GameObject {
             currentPointIndex = 0;
             nextPointIndex = 0;
             SetNextPointVelocity();
-        }
-
-        Vector2 GetCurrentPoint() {
-            return points.get(currentPointIndex);
         }
 
         boolean UpdatePath(Vector2 bodyPosition) {

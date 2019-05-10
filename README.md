@@ -1,15 +1,27 @@
-# Invasion 3102
+![Invasion 3102](https://github.com/Ahmed-MK/Invasion_3102/blob/master/core/assets/Banner%20and%20Screenshot/Banner.png)
 
-A retro themed 2D action platformer with a synthwave theme made with Java and LibGDX.
-
-
+## A retro themed 2D action platformer with a synthwave theme made with Java and LibGDX.
 
 
+## How to Run
+
+1.Install Java Runtime Environment (JRE) - https://java.com/en/download/
+  see this article for further guidance - https://windowsreport.com/jar-file-windows/#1
+
+2.Open command prompt (Windows) or terminal (Linux) and navigate to the game directory
+
+3.Run this command ```java -jar Invasion_3102.jar``` or double click on the jar file on Windows to run it directly.
 
 
 
+![Gameplay](https://github.com/Ahmed-MK/Invasion_3102/blob/master/core/assets/Banner%20and%20Screenshot/Screenshot.png)
 
 # Credits
+## Developers
+- Ahmed Mahmoud "[Ahmed-MK](https://github.com/Ahmed-MK)"
+- Andrew Awni "[andrewawni](https://github.com/andrewawni)"
+- Ahmed Abuamra "[ahmedabuamra](https://github.com/ahmedabuamra)"
+- Ahmed Elmayyah "[Satharus](https://github.com/Satharus)"
 
 ## List of Assets
 

@@ -15,25 +15,21 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
-
 import com.oop.platformer.Constants;
 
 
 public class Assets implements Disposable {
 
     public static final Assets instance = new Assets();
-    private AssetManager assetManager;
     public PlayerAssets playerAssets;
     public MainMenuAssets mainMenuAssets;
     public BulletAssets bulletAssets;
     public DroneEnemyAssets droneEnemyAssets;
     public TurretEnemyAssets turretEnemyAssets;
     public BossEnemyAssets bossEnemyAssets;
-
-
     public Audio audio;
     public CustomFont customFont;
-
+    private AssetManager assetManager;
 
     public void init(AssetManager assetManager) {
         this.assetManager = assetManager;
@@ -111,7 +107,6 @@ public class Assets implements Disposable {
             for (int i = 0; i <= 7; i++) {
                 deathFrames.add(atlas.findRegion("Ellie frame_death", i));
             }
-
             deathAnimation = new Animation<AtlasRegion>(0.1f, deathFrames, PlayMode.NORMAL);
 
             jumpingAnimation = new TextureRegion(atlas.findRegion("Ellie frame_run", 12));
@@ -186,10 +181,10 @@ public class Assets implements Disposable {
         public final Music loseMusic;
 
         public final Sound introLastSound;
-        final Sound gunShotSound;
         public final Sound enemyDestroyed;
         public final Sound enemyHit;
         public final Sound playerHit;
+        final Sound gunShotSound;
         final Sound playerDied;
         final Sound playerWon;
 

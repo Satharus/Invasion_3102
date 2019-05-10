@@ -12,7 +12,7 @@ public class Constants {
     //Rambo Texture Atlas path
     public static final String PLAYER_TEXTURE_ATLAS = "Player/player.atlas";
 
-    public static final int LIVES = 100;
+    public static final int LIVES = 10;
     public static final int SCORE = 0;
 
     //Enemy Textures paths
@@ -21,6 +21,7 @@ public class Constants {
 
     //Level 1 Map Path
     public static final String MAP = "Map/level1.tmx";
+    public static final String MAP2 = "Map/level2.tmx";
 
     //Main Menu Buttons and Background
     public static final String BACKGROUND = "StartScreen.png";
@@ -30,7 +31,6 @@ public class Constants {
     public static final float FIRE_RATE = 0.4f;
 
     //Audio Constants
-
     public static final String START_SCREEN_MUSIC = "Audio/Music/Perturbator - Night Slasher II (Lueur Verte).ogg";
     public static final String MUSIC = "Audio/Music/Perturbator - I Am The Program.ogg";
     public static final String INTRO_MUSIC = "IntroScreen/IntroMusic.ogg";

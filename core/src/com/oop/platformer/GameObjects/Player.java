@@ -4,18 +4,23 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.*;
-
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.Array;
 import com.oop.platformer.Constants;
 import com.oop.platformer.GameClass;
 import com.oop.platformer.util.Assets;
 
+import static java.lang.Math.min;
+
 public class Player extends GameObject {
 
 
-    public enum State {Falling, Jumping, Standing, Running, Shooting, Jumping_Shooting, Dead, Win}
-
-    private int jumpCounter = 0;
+    private final float damagePeriod;
+    public boolean shooting;
+    private int jumpCounter;
     private State currentState;
     private State previousState;
     private float stateTimer;
@@ -27,29 +32,29 @@ public class Player extends GameObject {
     //player dead or not
     private boolean win;
     private boolean dead;
-    public boolean shooting;
-
-    private Vector2 respawnPosition;
-    private float currentTime;
-    private float previousTime;
+    private boolean isDamaged;
+    private float damageTimer;
+    private Array<Vector2> playerCheckpoints;
+    private int currentCheckPointIndex;
     private float xRespawn, yRespawn;
-
+    private float currentTime;
     private float deathTime;
     private float winTime;
-
-    public Player(World world, Vector2 position) {
+    public Player(World world, Vector2 position, Array<Vector2> playerCheckpoints) {
         super(world, position);
 
-        respawnPosition = this.spritePosition;
+        jumpCounter = 0;
         xRespawn = this.spritePosition.x;
         yRespawn = this.spritePosition.y;
+        this.playerCheckpoints = playerCheckpoints;
         currentTime = 0;
-        previousTime = 0;
+
         deathTime = 0;
         winTime = 0;
 
         lives = Constants.LIVES;
         score = Constants.SCORE;
+        win = false;
         dead = false;
         shooting = false;
 
@@ -58,12 +63,17 @@ public class Player extends GameObject {
         stateTimer = 0;
         runningRight = true;
 
+        damagePeriod = 0.15f;
+
+        isDamaged = false;
+
+        currentCheckPointIndex = -1;
+
         setBounds(0, 0, 32 / GameClass.PPM, 32 / GameClass.PPM);
 
 
         setRegion(Assets.instance.playerAssets.idleAnimation.getKeyFrame(stateTimer, true));
     }
-
 
     @Override
     public void define() {
@@ -80,16 +90,21 @@ public class Player extends GameObject {
 
         shape.setRadius(13 / GameClass.PPM);
         fixtureDef.shape = shape;
-
-//        fixtureDef.friction = 0f;
-
-
-
+        fixtureDef.friction = 0f;
         body.createFixture(fixtureDef).setUserData(this);
     }
 
     public void update(float deltaTime) {
+
         currentTime += deltaTime;
+
+        if (isDamaged)
+            damageTimer += deltaTime;
+        if (damageTimer >= damagePeriod) {
+            damageTimer = 0;
+            isDamaged = false;
+        }
+
 
         if (win && winTime == 0)
             winTime = currentTime;
@@ -99,12 +114,12 @@ public class Player extends GameObject {
         setPosition(body.getPosition().x - getWidth() / 2, body.getPosition().y - getHeight() / 2);
         setRegion(getFrame(deltaTime));
 
-        //To Save a check point every 5 seconds of game play
-        if (currentTime - previousTime >= 5 && spritePosition.y >= 0 && currentState != State.Jumping && currentState != State.Falling) {
-            respawnPosition = this.spritePosition;
-            previousTime = currentTime;
-            xRespawn = respawnPosition.x;
-            yRespawn = respawnPosition.y;
+        if (currentCheckPointIndex + 1 < playerCheckpoints.size) {
+            if (body.getPosition().x >= playerCheckpoints.get(currentCheckPointIndex + 1).x / GameClass.PPM) {
+                xRespawn = playerCheckpoints.get(currentCheckPointIndex + 1).x / GameClass.PPM;
+                yRespawn = playerCheckpoints.get(currentCheckPointIndex + 1).y / GameClass.PPM;
+                currentCheckPointIndex++;
+            }
         }
     }
 
@@ -156,6 +171,10 @@ public class Player extends GameObject {
     }
 
     private State getState() {
+        if (dead)
+            return State.Dead;
+        else if (win)
+            return State.Win;
         if (body.getLinearVelocity().y < 0 || (body.getLinearVelocity().y < 0 && previousState == State.Jumping))
             return State.Falling;
         else if (body.getLinearVelocity().y > 0 && Gdx.input.isKeyPressed(Input.Keys.F))
@@ -166,10 +185,6 @@ public class Player extends GameObject {
             return State.Jumping;
         else if (shooting)
             return State.Shooting;
-        else if (dead)
-            return State.Dead;
-        else if (win)
-            return State.Win;
         else
             return State.Standing;
     }
@@ -178,34 +193,55 @@ public class Player extends GameObject {
 
         float verticalSpeed = body.getLinearVelocity().y;
 
-        if (verticalSpeed == 0)
-            jumpCounter = 0;
-
-        if (jumpCounter == 0 && verticalSpeed < 0)
-            jumpCounter = 2;
-
-        if (Gdx.input.isKeyJustPressed(Input.Keys.UP) && jumpCounter != 2) {
-            body.setLinearVelocity(body.getLinearVelocity().x, 2.5f);
-            jumpCounter++;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            body.setLinearVelocity(-1.8f, body.getLinearVelocity().y);
-        } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            body.setLinearVelocity(1.8f, body.getLinearVelocity().y);
-        } else {
-            body.setLinearVelocity(0, body.getLinearVelocity().y);
+        //ignores player input while the player is taking damage
+        if (!isDamaged) {
+            if (verticalSpeed == 0) {
+                jumpCounter = 0;
+            }
+            if (jumpCounter == 0 && verticalSpeed < 0) {
+                jumpCounter = 2;
+            }
+            if (Gdx.input.isKeyJustPressed(Input.Keys.UP) && jumpCounter != 2) {
+                body.setLinearVelocity(body.getLinearVelocity().x, 2.5f);
+                jumpCounter++;
+            } else if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+                body.setLinearVelocity(-1.8f, body.getLinearVelocity().y);
+            } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+                body.setLinearVelocity(1.8f, body.getLinearVelocity().y);
+            } else {
+                body.setLinearVelocity(0, body.getLinearVelocity().y);
+            }
         }
     }
 
     public void hitPlayer() {
+
         if (lives == 0) {
-            //TODO show Death Screen
-            System.out.println("you ran out of lives DEAD :( ");
+            //player is dead
             dead = true;
-            deathTime = currentTime;
+            if (deathTime == 0)
+                deathTime = currentTime;
+            body.setLinearVelocity(0, 0);
         } else {
-            System.out.println("player is hit");
+            //player is hit
             Assets.instance.audio.playerHit.play();
+            bouncePlayer();
             lives--;
+        }
+    }
+
+    private void bouncePlayer() {
+        isDamaged = true;
+        if (body.getLinearVelocity().x >= 0) {
+            if (body.getLinearVelocity().y >= 0)
+                body.setLinearVelocity((body.getLinearVelocity().x + 2) / 2 * -1, (body.getLinearVelocity().y + 2f));
+            else
+                body.setLinearVelocity((body.getLinearVelocity().x + 2) / 2 * -1, min((body.getLinearVelocity().y * -1), 4));
+        } else {
+            if (body.getLinearVelocity().y >= 0)
+                body.setLinearVelocity((body.getLinearVelocity().x - 2) / 2 * -1, (body.getLinearVelocity().y + 2f));
+            else
+                body.setLinearVelocity((body.getLinearVelocity().x - 2) / 2 * -1, min((body.getLinearVelocity().y * -1), 4));
         }
     }
 
@@ -231,7 +267,9 @@ public class Player extends GameObject {
         return dead;
     }
 
-    public boolean isWin() {return win;}
+    public boolean isWin() {
+        return win;
+    }
 
     public void increaseScore() {
         score += 100;
@@ -247,11 +285,11 @@ public class Player extends GameObject {
         return runningRight;
     }
 
-    public boolean wonLevel(){
+    public boolean wonLevel() {
         return win && currentTime - winTime >= 5;
     }
 
-    public void setWin(){
+    public void setWin() {
         win = true;
         winTime = currentTime;
     }
@@ -259,5 +297,7 @@ public class Player extends GameObject {
     public boolean lostLevel() {
         return dead && currentTime - deathTime >= 5;
     }
+
+    public enum State {Falling, Jumping, Standing, Running, Shooting, Jumping_Shooting, Dead, Win}
 
 }

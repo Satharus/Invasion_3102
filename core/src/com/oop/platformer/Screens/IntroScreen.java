@@ -19,27 +19,21 @@ import java.util.Collections;
 public class IntroScreen implements Screen {
 
     private boolean end;
-    private boolean mainThemeMusicPlayState;
-
-    private enum FrameState {FirstFrame, SecondFrame, ThirdFrame}
-
+//    private boolean mainThemeMusicPlayState;
     private FrameState currentFrame;
     private int currentLine;
     private String currentStoryLine;
     private ArrayList<String> storyLines;
     private boolean introEndingSoundEffect;
-
     private float currentTime;
     private float previousTime;
-
     private GameClass gameClass;
     private Viewport viewport;
-
     public IntroScreen(GameClass gameClass) {
         this.gameClass = gameClass;
-        mainThemeMusicPlayState = GameClass.isMusicPaused;
-        GameClass.isMusicPaused = true;
-        Assets.instance.audio.introMusic.play();
+//        mainThemeMusicPlayState = GameClass.isMusicPaused;
+//        GameClass.isMusicPaused = true;
+//        Assets.instance.audio.introMusic.play();
 
         OrthographicCamera camera = new OrthographicCamera();
         viewport = new StretchViewport(GameClass.screenWidth, GameClass.screenHeight, camera);
@@ -130,16 +124,14 @@ public class IntroScreen implements Screen {
 
     private void checkIntroEnd() {
         if (currentLine == 7 && !introEndingSoundEffect) {
-            Assets.instance.audio.introMusic.stop();
+            if (Assets.instance.audio.introMusic.isPlaying())
+                Assets.instance.audio.introMusic.stop();
             Assets.instance.audio.introLastSound.play();
             introEndingSoundEffect = true;
         }
-
         if (currentLine == 7 && currentTime - previousTime >= 3) {
-            GameClass.isMusicPaused = mainThemeMusicPlayState;
             end = true;
         }
-
     }
 
     @Override
@@ -154,9 +146,7 @@ public class IntroScreen implements Screen {
         checkIntroEnd();
 
         if (end) {
-            gameClass.beginLevel();
-            GameClass.isMusicPaused = mainThemeMusicPlayState;
-            gameClass.beginLevel();
+            gameClass.beginGame();
         }
 
         if (!end)
@@ -164,6 +154,9 @@ public class IntroScreen implements Screen {
 
         if (Gdx.input.isKeyPressed(Input.Keys.SPACE))
             end = true;
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.M))
+            GameClass.isMusicPaused = !GameClass.isMusicPaused;
 
     }
 
@@ -190,4 +183,6 @@ public class IntroScreen implements Screen {
     @Override
     public void dispose() {
     }
+
+    private enum FrameState {FirstFrame, SecondFrame, ThirdFrame}
 }
